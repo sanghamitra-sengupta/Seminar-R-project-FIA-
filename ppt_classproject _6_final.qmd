@@ -1,0 +1,759 @@
+---
+title: "Latitudinal distribution of tree species in the Eastern United States"
+format: 
+  pptx:
+    fig-width: 16
+    fig-height: 9
+editor: visual
+author: Cristina L,Sydney B, KN.Mitu,Sanghamitra S.
+---
+
+#### Preparing the Forest Inventory Data for analysis
+
+##### 1. Libraries
+
+To prepare the data for analysis,
+
+-First, 4 libraries were installed and called
+
+```         
+library(readr)
+library(dplyr)
+library(sf)
+library(ggplot2)
+```
+
+#### Preparing the Forest Inventory Data for analysis
+
+##### 2. Join required data frame
+
+-Second,the common name was appended to the data frame.
+
+```         
+REF_SPECIES <- read_csv("G:/Rtestproject/data/REF_SPECIES.csv")
+head(REF_SPECIES)
+commonname<-REF_SPECIES%>%
+  select(SPCD,COMMON_NAME,GENUS,SPECIES)
+tree_raw_common<-left_join(tree_raw_data_with_env_cleaned,commonname, by=c("spcd"="SPCD"),relationship = "many-to-many")
+```
+
+#### Preparing the Forest Inventory Data for analysis
+
+##### 3. View data frame structure
+
+-Third,the structure of the data frame was studied.
+
+```         
+str(tree_raw_common)
+```
+
+```{r,include=FALSE,warning=FALSE,message=FALSE}
+library(readr)
+library(dplyr)
+library(sf)
+library(ggplot2)
+tree_raw_data_with_env_cleaned <- read_csv("G:/Rtestproject/data/tree_raw_data_with_env_cleaned.csv")
+dim(tree_raw_data_with_env_cleaned)
+head(tree_raw_data_with_env_cleaned)
+str(tree_raw_data_with_env_cleaned)
+REF_SPECIES <- read_csv("G:/Rtestproject/data/REF_SPECIES.csv")
+head(REF_SPECIES)
+commonname<-REF_SPECIES%>%
+  select(SPCD,COMMON_NAME,GENUS,SPECIES)
+tree_raw_common<-left_join(tree_raw_data_with_env_cleaned,commonname, by=c("spcd"="SPCD"),relationship = "many-to-many")
+head(tree_raw_common)
+
+```
+
+#### Analyzing NA values in the data frame.
+
+NA values: 683617 rows were removed.
+
+``` smaller
+rows_with_na <- tree_raw_common[apply(is.na(tree_raw_common), 1, any), ]
+unique(rows_with_na$statename) ##states with na entries
+unique(rows_with_na$COMMON_NAME) ##species with na entries
+nrow(rows_with_na)   ###683617 rows
+nona_tree_raw<-na.omit(tree_raw_common)
+nrow(nona_tree_raw)  ###683617 rows remove
+summary(nona_tree_raw)
+```
+
+```{r,include=FALSE,warning=FALSE,message=FALSE}
+
+rows_with_na <- tree_raw_common[apply(is.na(tree_raw_common), 1, any), ]
+
+unique(rows_with_na$statename) ##states with na entries
+
+unique(rows_with_na$COMMON_NAME) ##species with na entries
+
+nrow(rows_with_na)   ###683617 rows
+
+ 
+nona_tree_raw<-na.omit(tree_raw_common)
+nrow(nona_tree_raw)  ###683617 rows removed
+
+summary(nona_tree_raw)
+```
+
+#### Explanatory Data Analysis of Forest Inventory Dataframe
+
+##### 1.Eastern US Tree Heights Distribution
+
+```         
+plot_tree_height<-ggplot(nona_tree_raw, aes(x = ht)) +
+  geom_histogram(binwidth = 5,color = "black") +
+  labs(title = "Eastern US Tree Heights Distribution")
+```
+
+```{r,warning=FALSE,message=FALSE}
+plot_tree_height<-ggplot(nona_tree_raw, aes(x = ht)) +
+  geom_histogram(binwidth = 5,color = "black") +
+  labs(title = "Eastern US Tree Heights Distribution")
+ggsave("easternUS_tree_height_distribution.png", plot_tree_height, width = 10, height = 6)
+plot_tree_height
+```
+
+#### Explanatory Data Analysis of Forest Inventory Dataframe
+
+##### 2.Eastern US Tree Diameter Distribution
+
+```         
+plot_tree_dia<-ggplot(nona_tree_raw,aes(x=dia))+
+  geom_histogram(binwidth = 0.2,color = "blue")+
+  labs(title = "Eastern US Tree Diameter Distribution")
+```
+
+```{r,warning=FALSE,message=FALSE}
+plot_tree_dia<-ggplot(nona_tree_raw,aes(x=dia))+
+  geom_histogram(binwidth = 0.2,color = "blue")+
+  labs(title = "Eastern US Tree Diameter Distribution")
+ggsave("easternUS_tree_diameter_distribution.png", plot_tree_dia, width = 10, height = 6)
+plot_tree_dia
+```
+
+#### Explanatory Data Analysis of Forest Inventory Dataframe
+
+##### 3.Eastern US Scatter Plot of Tree Height vs Diameter
+
+```         
+scatter_plot_ht_dia<-ggplot(nona_tree_raw, aes(x = ht, y = dia)) +
+  geom_point(color="red") +
+  labs(title = "Eastern US Scatter Plot of Tree Height Diameter")
+```
+
+```{r,warning=FALSE,message=FALSE}
+scatter_plot_ht_dia<-ggplot(nona_tree_raw, aes(x = ht, y = dia)) +
+  geom_point(color="red") +
+  labs(title = "Eastern US Scatter Plot of Tree Height Diameter")
+ggsave("easternUS_scatterplot_tree_height_and_dia_distribution.png",scatter_plot_ht_dia , width = 10, height = 6)
+scatter_plot_ht_dia
+```
+
+#### Explanatory Data Analysis of Forest Inventory Dataframe
+
+##### 4.Eastern US Scatter Plot of Tree Height vs Diameter for each species
+
+```         
+scatter_plot_ht_dia_facetwrap <- ggplot(nona_tree_raw, aes(x = ht, y = dia, color = common)) +
+  geom_point() +
+  facet_wrap(~common) +
+  labs(title = "Eastern US Scatter Plot of Tree Height vs. Diameter",
+       x = "Tree Height",
+       y = "Diameter")
+```
+
+```{r,warning=FALSE,message=FALSE}
+scatter_plot_ht_dia_facetwrap <- ggplot(nona_tree_raw, aes(x = ht, y = dia, color = common)) +
+  geom_point() +
+  facet_wrap(~common) +
+  labs(title = "Eastern US Scatter Plot of Tree Height vs. Diameter",
+       x = "Tree Height",
+       y = "Diameter")
+ggsave("Eastern US Scatter Plot of Tree Height vs. Diameter for each species.png",scatter_plot_ht_dia_facetwrap, width = 10, height = 6)
+scatter_plot_ht_dia_facetwrap
+```
+
+#### Explanatory Data Analysis of Forest Inventory Dataframe
+
+##### 5.NA values distribution grouped by state
+
+``` scrollable
+na_distribution_by_state <- tree_raw_common %>%
+  group_by(statename) %>%
+  select(spcd,common,dia,ht)%>%
+  summarize(across(everything(), ~ sum(is.na(.))))
+```
+
+#### Explanatory Data Analysis of Forest Inventory Dataframe
+
+##### 5.NA values distribution grouped by state
+
+``` scrollable
+plot_na_distribution_by_state <- ggplot(na_distribution_by_state, aes(x = statename)) +
+  geom_bar(aes(y = dia, fill = "Diameter"), stat = "identity", alpha = 0.8) +
+  geom_bar(aes(y = ht, fill = "Height"), stat = "identity", alpha = 0.4) +
+  labs(title = "NA value Distribution of Diameter  and Height by State",
+       x = "State",
+       y = "Count of NA values") +
+  scale_fill_manual(values = c("Diameter" = "blue", "Height" = "green"),
+                    name = "Parameter Color") +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        plot.background = element_rect(fill = "white"), 
+        axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r,include=FALSE,warning=FALSE,message=FALSE}
+na_distribution_by_state <- tree_raw_common %>%
+  group_by(statename) %>%
+  select(spcd,common,dia,ht)%>%
+  summarize(across(everything(), ~ sum(is.na(.))))
+na_distribution_by_state
+```
+
+```{r,warning=FALSE,message=FALSE}
+plot_na_distribution_by_state <- ggplot(na_distribution_by_state, aes(x = statename)) +
+  geom_bar(aes(y = dia, fill = "Diameter"), stat = "identity", alpha = 0.8) +
+  geom_bar(aes(y = ht, fill = "Height"), stat = "identity", alpha = 0.4) +
+  labs(title = "NA value Distribution of Diameter  and Height by State",
+       x = "State",
+       y = "Count of NA values") +
+  scale_fill_manual(values = c("Diameter" = "blue", "Height" = "green"),
+                    name = "Parameter Color") +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        plot.background = element_rect(fill = "white"), 
+        axis.text.x = element_text(angle = 45, hjust = 1))
+ 
+print(plot_na_distribution_by_state)
+
+ggsave("na_distributionbystate_plot.png", plot_na_distribution_by_state, width = 10, height = 6)
+
+```
+
+#### Explanatory Data Analysis of Forest Inventory Dataframe
+
+##### 6.NA values distribution grouped by species
+
+``` scrollable
+na_distribution_by_species <- tree_raw_common %>%
+  group_by(common) %>%
+  select(spcd,dia,ht)%>%
+  summarize(across(everything(), ~ sum(is.na(.))))
+```
+
+#### Explanatory Data Analysis of Forest Inventory Dataframe
+
+##### 6.NA values distribution grouped by species
+
+``` scrollable
+plot_na_distribution_by_species <- ggplot(na_distribution_by_species, aes(x = common)) +
+  geom_bar(aes(y = dia, fill = "Diameter"), stat = "identity", alpha = 0.8) +
+  geom_bar(aes(y = ht, fill = "Height"), stat = "identity", alpha = 0.4) +
+  labs(title = "NA value Distribution of Diameter and Height by Species",
+       x = "Species",
+       y = "Count of NA values") +
+  scale_fill_manual(values = c("Diameter" = "blue", "Height" = "green"),
+                    name = "Parameter Color") +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        plot.background = element_rect(fill = "white"), 
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 4))
+```
+
+```{r,include=FALSE,warning=FALSE,message=FALSE}
+
+#na ggplot grouped by species
+na_distribution_by_species <- tree_raw_common %>%
+  group_by(common) %>%
+  select(spcd,dia,ht)%>%
+  summarize(across(everything(), ~ sum(is.na(.))))
+na_distribution_by_species
+```
+
+```{r,warning=FALSE,message=FALSE}
+plot_na_distribution_by_species <- ggplot(na_distribution_by_species, aes(x = common)) +
+  geom_bar(aes(y = dia, fill = "Diameter"), stat = "identity", alpha = 0.8) +
+  geom_bar(aes(y = ht, fill = "Height"), stat = "identity", alpha = 0.4) +
+  labs(title = "NA value Distribution of Diameter and Height by Species",
+       x = "Species",
+       y = "Count of NA values") +
+  scale_fill_manual(values = c("Diameter" = "blue", "Height" = "green"),
+                    name = "Parameter Color") +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        plot.background = element_rect(fill = "white"), 
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 4))
+
+print(plot_na_distribution_by_species)
+
+ggsave("na_distributionbyspecies_plot.png", plot_na_distribution_by_species, width = 12, height = 6)
+
+```
+
+#### Explanatory Data Analysis of Forest Inventory Dataframe
+
+##### 7.Top 50 most abundant tree species in the Eastern US
+
+``` smaller
+abundance_species <- tree_raw_common %>%
+  group_by(common) %>%
+  summarise(abundance = n()) %>%
+  arrange(desc(abundance)) %>%
+  head(50)
+  
+```
+
+#### Explanatory Data Analysis of Forest Inventory Dataframe
+
+##### 7.Top 50 most abundant tree species in the Eastern US
+
+``` scrollable
+pie_plot <- ggplot(abundance_species, aes(x = "", y = abundance, fill = common)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar("y") +
+  labs(title = "Top 50 Species Abundance",
+       fill = "Species") +
+  theme_void() +
+  theme(plot.background = element_rect(fill = "white"))
+print(pie_plot)
+ggsave("Top 50 Abundant Species_piechart.png", pie_plot, width = 12, height = 6)
+```
+
+```{r,include=FALSE,warning=FALSE,message=FALSE}
+library(dplyr)
+library(ggplot2)
+
+
+abundance_species <- tree_raw_common %>%
+  group_by(common) %>%
+  summarise(abundance = n()) %>%
+  arrange(desc(abundance)) %>%
+  head(50)
+```
+
+```{r,warning=FALSE,message=FALSE}
+pie_plot <- ggplot(abundance_species, aes(x = "", y = abundance, fill = common)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar("y") +
+  labs(title = "Top 50 Species Abundance",
+       fill = "Species") +
+  theme_void() +
+  theme(plot.background = element_rect(fill = "white"))
+print(pie_plot)
+ggsave("Top 50 Abundant Species_piechart.png", pie_plot, width = 12, height = 6)
+```
+
+#### Explanatory Data Analysis of Forest Inventory Dataframe
+
+##### 8.Statewide abundance and richness of top 50 most abundant tree species
+
+``` smaller
+abundance_joined<-left_join(abundance_species,tree_raw_common,by=c("common"="common"))
+abundance_joined
+abundance_state<-abundance_joined%>%
+  select(common,abundance,statename)%>%
+  group_by(statename)
+```
+
+#### Explanatory Data Analysis of Forest Inventory Dataframe
+
+##### 8.Statewide abundance and richness of top 50 most abundant tree species
+
+``` scrollable
+plot_top50 <- ggplot(abundance_state, aes(x = statename, color = common)) +
+  geom_bar(aes(y = abundance), stat = "identity", alpha = 0.8) +
+  labs(title = "Statewide distribution of Top 50 Abundant Species",
+       x = "State",
+       y = "Tree Count") +
+  theme_minimal() +
+  theme(legend.position = "right",  
+        legend.box = "vertical",   
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        plot.background = element_rect(fill = "white"),
+        plot.margin = margin(0.5, 2, 0.5, 0.5, "cm"))
+```
+
+```{r,include=FALSE,warning=FALSE,message=FALSE}
+#top 50 abundant species grouped by state
+
+abundance_species <- tree_raw_common %>%
+  group_by(common) %>%
+  summarise(abundance = n()) %>%
+  arrange(desc(abundance)) %>%
+  head(50)
+abundance_joined<-left_join(abundance_species,tree_raw_common,by=c("common"="common"))
+abundance_joined
+abundance_state<-abundance_joined%>%
+  select(common,abundance,statename)%>%
+  group_by(statename)
+abundance_state
+```
+
+```{r,warning=FALSE,message=FALSE}
+plot_top50 <- ggplot(abundance_state, aes(x = statename, color = common)) +
+  geom_bar(aes(y = abundance), stat = "identity", alpha = 0.8) +
+  labs(title = "Statewide distribution of Top 50 Abundant Species",
+       x = "State",
+       y = "Tree Count") +
+  theme_minimal() +
+  theme(legend.position = "right",  
+        legend.box = "vertical",   
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        plot.background = element_rect(fill = "white"),
+        plot.margin = margin(0.5, 2, 0.5, 0.5, "cm"))  
+
+ggsave("plot_top50_bystatedistribution_with_legend_and_margin_white_background.png", plot_top50, width = 12, height = 8)
+print(plot_top50)
+```
+
+#### Calculating tree species richness at grid level
+
+##### 1. Creating an sf object
+
+``` scrollable
+fia <-read_csv("G:/Rtestproject/r-intro/tree data/tree_raw_data_with_env_cleaned.csv")
+
+fia_df <- fia %>%
+  select(X, TREEcn, plt_cn, invyr, statecd, spcd, dia, ht, lat, long, common)
+
+fia_sf <- st_as_sf(fia_df, coords = c("long", "lat"), crs = 4326)
+fia_sf_albers <- st_transform(fia_sf, crs = "ESRI:102008")
+extent <- st_bbox(fia_sf_albers)
+```
+
+#### Calculating tree species richness at grid level
+
+##### 2. Creating a 20\*20 grid
+
+``` scrollable
+grid <- st_make_grid(st_as_sfc(extent), crs = "ESRI:102008", cellsize = c(20000, 20000), square = TRUE)
+grid_sf <- st_sf(id = 1:length(grid), geometry = grid)
+```
+
+#### Calculating tree species richness at grid level
+
+##### 3. Joining and overlaying the grid and the data frame
+
+``` scrollable
+overlaps <- st_join(fia_sf_albers, grid_sf)
+centroids_albers <- st_centroid(grid_sf$geometry)
+```
+
+#### Calculating tree species richness at grid level
+
+##### 4. Extracting the unique overlapping grids into a data frame
+
+``` scrollalable
+id1 <- unique(overlaps$id)
+centroids_albers <- st_centroid(grid_sf[grid_sf$id %in% id1,]$geometry)
+centroids_wgs84 <- st_transform(centroids_albers, crs = 4326)
+centroids_wgs84_coords <- st_coordinates(centroids_wgs84)
+gridid <- grid_sf[grid_sf$id %in% id1,]$id
+centroid_df <- data.frame(
+  GRIDID = id1,
+  centroid_long = centroids_wgs84_coords[,"X"],
+  centroid_lat = centroids_wgs84_coords[,"Y"]
+)
+```
+
+#### Calculating tree species richness at grid level
+
+##### 5. Merging the unique grids with the Forest Inventory data frame
+
+``` scrollable
+fia_grid <- merge(overlaps, centroid_df, by.x = "id", by.y = "GRIDID", all.x = TRUE)
+fia_grid_df <- as.data.frame(fia_grid)
+fia_grid_df
+```
+
+#### Calculating tree species richness at grid level
+
+##### 6. Calculating species richness per grid
+
+``` scrollable
+sp_rich<- fia_grid_df %>%                    ##calculating species richness
+  select(id, common,centroid_long, centroid_lat,spcd) %>%
+  group_by(id)%>%
+  summarise(uniquetreecount_id = n_distinct(spcd))
+  
+final_sp_rich<-left_join(fia_grid_df,sp_rich,by=c("id"="id"))
+final_sp_rich                ##joining species richness with the data frame
+```
+
+#### Calculating tree species richness at grid level
+
+##### 7. Checking for NA values and cleaning up the data frame
+
+``` scrollable
+sum(is.na(final_sp_rich))
+
+sel_col_sp_rich<-final_sp_rich%>%
+  select(id, common,spcd,centroid_long, centroid_lat,uniquetreecount_id)
+sel_col_sp_rich
+
+sum(is.na(sel_col_sp_rich)) ##0 
+
+cleaned_sp_rich<-na.omit(sel_col_sp_rich)
+head(cleaned_sp_rich)
+```
+
+```{r,include=FALSE,warning=FALSE,message=FALSE}
+fia <-read_csv("G:/Rtestproject/r-intro/tree data/tree_raw_data_with_env_cleaned.csv")
+View(tree_raw_data_with_env_cleaned)
+
+fia_df <- fia %>%
+  select(X, TREEcn, plt_cn, invyr, statecd, spcd, dia, ht, lat, long, common)
+
+fia_sf <- st_as_sf(fia_df, coords = c("long", "lat"), crs = 4326)
+fia_sf_albers <- st_transform(fia_sf, crs = "ESRI:102008")
+extent <- st_bbox(fia_sf_albers)
+grid <- st_make_grid(st_as_sfc(extent), crs = "ESRI:102008", cellsize = c(20000, 20000), square = TRUE)
+grid_sf <- st_sf(id = 1:length(grid), geometry = grid)
+overlaps <- st_join(fia_sf_albers, grid_sf)
+centroids_albers <- st_centroid(grid_sf$geometry)
+id1 <- unique(overlaps$id)
+centroids_albers <- st_centroid(grid_sf[grid_sf$id %in% id1,]$geometry)
+centroids_wgs84 <- st_transform(centroids_albers, crs = 4326)
+centroids_wgs84_coords <- st_coordinates(centroids_wgs84)
+gridid <- grid_sf[grid_sf$id %in% id1,]$id
+centroid_df <- data.frame(
+  GRIDID = id1,
+  centroid_long = centroids_wgs84_coords[,"X"],
+  centroid_lat = centroids_wgs84_coords[,"Y"]
+)
+fia_grid <- merge(overlaps, centroid_df, by.x = "id", by.y = "GRIDID", all.x = TRUE)
+fia_grid_df <- as.data.frame(fia_grid)
+fia_grid_df
+
+sp_rich<- fia_grid_df %>%
+  select(id, common,centroid_long, centroid_lat,spcd) %>%
+  group_by(id)%>%
+  summarise(uniquetreecount_id = n_distinct(spcd))
+  
+head(sp_rich)  
+View(sp_rich)
+final_sp_rich<-left_join(fia_grid_df,sp_rich,by=c("id"="id"))
+final_sp_rich
+
+
+
+sum(is.na(final_sp_rich))
+
+sel_col_sp_rich<-final_sp_rich%>%
+  select(id, common,spcd,centroid_long, centroid_lat,uniquetreecount_id)
+sel_col_sp_rich
+
+sum(is.na(sel_col_sp_rich)) ##0 
+
+cleaned_sp_rich<-na.omit(sel_col_sp_rich)
+head(cleaned_sp_rich)
+```
+
+#### Displaying tree species rich on the Eastern US map at grid level
+
+``` smaller
+plot2<-ggplot(cleaned_sp_rich, aes(x = centroid_long, y = centroid_lat, color = uniquetreecount_id)) +
+  geom_point(size = 1) +
+  scale_color_gradient(low = "blue", high = "red", name = "Species Richness") +
+  labs(title = "Eastern US Species Richness", 
+       x = "Longitude", y = "Latitude") +
+  theme_minimal()+
+  theme(legend.position = "right",  
+        legend.box = "vertical",   
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        plot.background = element_rect(fill = "white"),
+        plot.margin = margin(0.5, 2, 0.5, 0.5, "cm"))
+```
+
+```{r,warning=FALSE,message=FALSE}
+plot2<-ggplot(cleaned_sp_rich, aes(x = centroid_long, y = centroid_lat, color = uniquetreecount_id)) +
+  geom_point(size = 1) +
+  scale_color_gradient(low = "blue", high = "red", name = "Species Richness") +
+  labs(title = "Eastern US Species Richness", 
+       x = "Longitude", y = "Latitude") +
+  theme_minimal()+
+  theme(legend.position = "right",  
+        legend.box = "vertical",   
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        plot.background = element_rect(fill = "white"),
+        plot.margin = margin(0.5, 2, 0.5, 0.5, "cm"))  
+
+ggsave("Eastern us Species Richness.png",plot2, width = 12, height = 8)
+plot2
+```
+
+#### Moving average and bootstrapping
+
+##### 1. Creating lat band Sequence by 0.5 to create bootstrapping samples
+
+-Creating the Latband sequence by 0.5 computes species richness as a moving average.
+
+```         
+myseq <- seq(from = 25, to = 50, by = 0.5)
+
+bootstrap <- data.frame(matrix(nrow = length(myseq), ncol = 1001))
+
+for (i in 1:length(myseq)) {
+  lat_min <- myseq[i] - 0.5
+  lat_max <- myseq[i] + 0.5
+  cleaned_sp_rich_subset <-cleaned_sp_rich%>%
+    filter(centroid_lat > lat_min & centroid_lat <= lat_max)
+  
+  bootstrap[i, 1] <- myseq[i]
+```
+
+#### Moving average and bootstrapping
+
+##### 2. Bootstrap random sampling and 1000 times iterating loop
+
+-Creating subsets of 200 random samples for each lat band per iteration.
+
+-Computing species richness aggregated at latitude level.
+
+```         
+for (iteration in 2:1001) {
+    sample_200 <- sample(1:nrow(cleaned_sp_rich_subset), size = 200, replace = TRUE)
+    bootstrap_sample <- cleaned_sp_rich_subset[sample_200, ]
+    bootstrap_sr <- length(unique(bootstrap_sample$common))
+    bootstrap[i, iteration] <- bootstrap_sr
+  }
+}
+
+print(bootstrap)
+head(bootstrap)
+```
+
+```{r,include=FALSE,warning=FALSE,message=FALSE}
+myseq <- seq(from = 25, to = 50, by = 0.5)
+
+
+
+library(dplyr)
+
+
+bootstrap <- data.frame(matrix(nrow = length(myseq), ncol = 1001))
+
+
+
+for (i in 1:length(myseq)) {
+  lat_min <- myseq[i] - 0.5
+  lat_max <- myseq[i] + 0.5
+  cleaned_sp_rich_subset <-cleaned_sp_rich%>%
+    filter(centroid_lat > lat_min & centroid_lat <= lat_max)
+  
+  bootstrap[i, 1] <- myseq[i]
+  
+  
+  for (iteration in 2:1001) {
+    sample_200 <- sample(1:nrow(cleaned_sp_rich_subset), size = 200, replace = TRUE)
+    bootstrap_sample <- cleaned_sp_rich_subset[sample_200, ]
+    bootstrap_sr <- length(unique(bootstrap_sample$common))
+    bootstrap[i, iteration] <- bootstrap_sr
+  }
+}
+
+
+print(bootstrap)
+head(bootstrap)
+```
+
+#### Moving average and bootstrapping
+
+##### 3. Species Richness Mean and Standard deviations for each latband.
+
+``` smaller
+myseq <- seq(from = 25, to = 50, by = 0.5)
+
+Result1 <- data.frame(LatBands = numeric(length(myseq)),
+                     Mean = numeric(length(myseq)),
+                     std = numeric(length(myseq)))
+
+
+for (i in seq_along(myseq)) {
+  row_data <- bootstrap[i,]
+  
+  
+  means <- rowMeans(row_data, na.rm = TRUE)
+  stds <- sd(row_data, na.rm = TRUE)
+  
+  
+  Result1[i, c("LatBands", "Mean", "std")] <- c(myseq[i], means, stds)
+}
+Result1
+```
+
+```{r,include=FALSE,warning=FALSE,message=FALSE}
+myseq <- seq(from = 25, to = 50, by = 0.5)
+
+Result1 <- data.frame(LatBands = numeric(length(myseq)),
+                     Mean = numeric(length(myseq)),
+                     std = numeric(length(myseq)))
+
+
+for (i in seq_along(myseq)) {
+  row_data <- bootstrap[i,]
+  
+  
+  means <- rowMeans(row_data, na.rm = TRUE)
+  stds <- sd(row_data, na.rm = TRUE)
+  
+  
+  Result1[i, c("LatBands", "Mean", "std")] <- c(myseq[i], means, stds)
+}
+Result1
+
+```
+
+#### Plotting result
+
+##### Latitudinal distribution of Species richness in the Eastern US
+
+``` smaller
+boot_plot2<- ggplot(Result1, aes(x = LatBands)) +
+  geom_point(aes(y = Mean, color = "Mean"), size = 1, alpha = 1) +
+  geom_point(aes(y = std, color = "Standard Deviation"), size = 1, alpha = 1) +
+  labs(title = "Distribution of Species Richness Mean and Standard Deviation per latitude band after bootstrapping",
+       x = "Latitude Band",
+       y = "Mean") +
+  theme_minimal() +
+  theme(legend.position = "right",  
+        legend.box = "vertical",   
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        plot.background = element_rect(fill = "white"),
+        plot.margin = margin(0.5, 2, 0.5, 0.5, "cm"))   +
+  scale_color_manual(values = c("Mean" = "blue", "Standard Deviation" = "red")) +
+  guides(color = guide_legend(title = NULL), linetype = guide_legend(title = NULL))+
+  scale_y_continuous(
+    sec.axis = sec_axis(~., name = "Standard Deviation", labels = scales::number_format(scale = 1))
+  )
+```
+
+```{r,warning=FALSE,message=FALSE}
+boot_plot2<- ggplot(Result1, aes(x = LatBands)) +
+  geom_point(aes(y = Mean, color = "Mean"), size = 1, alpha = 1) +
+  geom_point(aes(y = std, color = "Standard Deviation"), size = 1, alpha = 1) +
+  labs(title = "Distribution of Species Richness Mean and Standard Deviation per latitude band after bootstrapping",
+       x = "Latitude Band",
+       y = "Mean") +
+  theme_minimal() +
+  theme(legend.position = "right",  
+        legend.box = "vertical",   
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        plot.background = element_rect(fill = "white"),
+        plot.margin = margin(0.5, 2, 0.5, 0.5, "cm"))   +
+  scale_color_manual(values = c("Mean" = "blue", "Standard Deviation" = "red")) +
+  guides(color = guide_legend(title = NULL), linetype = guide_legend(title = NULL))+
+  scale_y_continuous(
+    sec.axis = sec_axis(~., name = "Standard Deviation", labels = scales::number_format(scale = 1))
+  )
+  
+boot_plot2
+
+ggsave("Distribution of Species Richness Mean and Standard Deviation per latitude band after bootstrapping.png",boot_plot2, width = 11, height = 8)
+```
+
+#### Question?
+
+![](https://creazilla.com/nodes/64926-colourful-question-marks-clipart)
